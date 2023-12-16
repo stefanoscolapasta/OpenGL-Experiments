@@ -29,7 +29,7 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(960, 540, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -47,10 +47,10 @@ int main(void)
     
     //based on where we specify the texture coordinate compared to vertex positions, OpenGL will interpolate accordingly 
     float positions[] = {
-        100.0f, 100.0f, 0.0f, 0.0f, //first two are vertex pos in NDC (normal. dev. coordin.), other two are Text Coords (0,0)...(1,1)
-        200.0f, 100.0f, 1.0f, 0.0f,
-        200.0f,  200.0f, 1.0f, 1.0f,
-        100.0f,  200.0f, 0.0f, 1.0f
+        -50.0f, -50.0f, 0.0f, 0.0f, //first two are vertex pos in NDC (normal. dev. coordin.), other two are Text Coords (0,0)...(1,1)
+        50.0f, -50.0f, 1.0f, 0.0f,
+        50.0f,  50.0f, 1.0f, 1.0f,
+        -50.0f,  50.0f, 0.0f, 1.0f
     };
 
     //Ok now here we have the indices that make up our triangles, we want to send them to the GPU and use them there
@@ -71,7 +71,7 @@ int main(void)
     IndexBuffer ib(indices, 6);
 
     glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f); //Based on aspect ratio which is 4:3 currently, you give boundaries but then it remaps to an NDC space
-    glm::mat4 view = glm::translate(glm::mat4(1.0), glm::vec3(-100, 0, 0));
+    glm::mat4 view = glm::translate(glm::mat4(1.0), glm::vec3(0, 0, 0));
 
     Shader shader("res/shaders/Basic.shader");
     shader.Bind();
@@ -102,20 +102,35 @@ int main(void)
     float r = 0.0f;
     float increment = 0.05f;
     /* Loop until the user closes the window */
-    glm::vec3 translation(0, 0, 0);
+    glm::vec3 translationA(0, 0, 0);
+    glm::vec3 translationB(300, 100, 0);
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         renderer.Clear(); //clear all colors and depth buffer info
         ImGui_ImplGlfwGL3_NewFrame();
 
-        glm::mat4 model = glm::translate(glm::mat4(1.0), translation);
-        glm::mat4 mvp = proj * view * model;
+        
 
         shader.Bind();
-        shader.setUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
-        shader.setUniformMat4f("u_MVP", mvp);
-        renderer.Draw(va, ib, shader);
+        {
+            glm::mat4 model = glm::translate(glm::mat4(1.0), translationA);
+            glm::mat4 mvp = proj * view * model;
+            shader.setUniformMat4f("u_MVP", mvp);
+
+            renderer.Draw(va, ib, shader);
+        }
+        {
+            glm::mat4 model = glm::translate(glm::mat4(1.0), translationB);
+            glm::mat4 mvp = proj * view * model;
+            //shader.setUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+            shader.setUniformMat4f("u_MVP", mvp);
+
+            renderer.Draw(va, ib, shader);
+        }
+        
+
+        
 
         if (r > 1.0f)
             increment = -0.05f;
@@ -124,10 +139,10 @@ int main(void)
         r += increment;
 
         {       
-            ImGui::SliderFloat3("Translation", &translation[0], 0.0f, 960.0f);
+            ImGui::SliderFloat3("TranslationA", &translationA[0], 0.0f, 960.0f);
+            ImGui::SliderFloat3("TranslationB", &translationB[0], 0.0f, 960.0f);
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         }
-
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
